@@ -1,0 +1,5 @@
+Looking in indexes: https://pypi.tuna.tsinghua.edu.cn/simple
+Collecting websocket-client
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/34/db/b10e48aa8fff7407e67470363eac595018441cf32d5e1001567a7aeba5d2/websocket_client-1.9.0-py3-none-any.whl (82 kB)
+Installing collected packages: websocket-client
+Successfully installed websocket-client-1.9.0

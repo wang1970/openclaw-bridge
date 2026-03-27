@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+.venv/
+venv/
+
+# Models (large files, download separately)
+models/
+
+# Logs
+logs/
+*.log
+
+# Device key (sensitive)
+.device_key.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+Desktop.ini
