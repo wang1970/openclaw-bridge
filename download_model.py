@@ -13,9 +13,9 @@ ASR_DIR = "./models/sherpa-onnx-paraformer-zh-small-2024-03-09"
 KWS_URL = "https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2"
 KWS_DIR = "./models/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01"
 
-# TTS 语音合成模型 (aishell3 中文, 30MB)
-TTS_URL = "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2"
-TTS_DIR = "./models/vits-icefall-zh-aishell3"
+# TTS 语音合成模型 (MeloTTS 中英双语版)
+TTS_URL = "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-melo-tts-zh_en.tar.bz2"
+TTS_DIR = "./models/vits-melo-tts-zh_en"
 
 
 def download(url: str, dest: str):

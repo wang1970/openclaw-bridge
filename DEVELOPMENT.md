@@ -6,6 +6,30 @@ Natural voice interaction triggered by a customizable wake word.
 
 ---
 
+## Feature Overview
+
+### ✅ Done
+- Continuous mic monitoring + VAD speech detection
+- Dual-engine wake-word detection (KWS + ASR text matching)
+- Offline speech recognition (ASR)
+- Offline speech synthesis (TTS, MeloTTS Chinese+English)
+- WebSocket long-connection + Ed25519 signing
+- Multi-turn dialogue + smart buffering
+- Wake feedback ("我在" / "小龙虾跑了")
+- Message tagging (`[bridge]` prefix, Agent personality switching)
+- Text cleaning + mic control + debug logging
+
+### 🔲 TODO
+- **Streaming TTS** — generate and play simultaneously to reduce perceived latency
+- **Interruption** — user speech interrupts TTS playback, like Xiaomi AI assistant
+- **Runtime speed control** — adjust speech rate via voice command or hotkey
+- **Agent persona optimization** — more natural, voice-friendly responses
+- **System tray icon** — minimize to tray, run in background
+- **External config file** — move from config.py to JSON/YAML
+- **Auto-start on boot** — launch automatically with the system
+
+---
+
 ## V1: End-to-End Validation ✅ Done
 
 ### Features
@@ -29,10 +53,9 @@ Total latency ~11s (Agent response ~6s, on OpenClaw side).
 ---
 
 ## V2: TTS Voice Playback ✅ Done
-- sherpa-onnx VITS offline Chinese TTS (`vits-icefall-zh-aishell3`, 8000Hz)
-- sounddevice playback, microphone paused during playback to prevent echo
-- Text cleaning: emoji filtering + markdown stripping + English/digit filtering (`clean_text_for_tts()`)
-- `TTS_KEEP_ENGLISH` config option for switching to multi-language TTS models
+- sherpa-onnx MeloTTS offline TTS (`vits-melo-tts-zh_en`, 22050Hz, Chinese+English)
+- sounddevice playback, mic pausing controlled by `TTS_MUTE_MIC` config
+- Text cleaning: emoji filtering + markdown stripping (`clean_text_for_tts()`), Chinese+English mixed text handled by MeloTTS
 
 ## V3: Wake Feedback + UX Optimization ✅ Done
 - **Warm-up prompt**: "please wait, starting up..."
@@ -131,7 +154,7 @@ Parameters to be configured by users when deploying to external Hub:
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `OPENCLAW_URL` | `http://127.0.0.1:18789/` | Gateway URL (change to domain/IP for remote) |
-| `OPENCLAW_TOKEN` | `106d...` | WebSocket auth token |
+| `OPENCLAW_TOKEN` | `106d...` | WebSocket auth token. Found in OpenClaw Hub → Device Management → click your device → copy Token field |
 | `OPENCLAW_SESSION` | `openclaw-bridge` | Session identifier |
 | `OPENCLAW_SESSION_KEY` | `agent:main:main` | Agent session key (maps to frontend session param) |
 | `VOICE_BRIDGE_TAG` | `[bridge] ` | Message prefix tag (Agent uses this to switch personality) |
@@ -144,7 +167,8 @@ Every message sent to Agent is prefixed with `VOICE_BRIDGE_TAG` (default `[bridg
 ### Other Improvements
 - **Heartbeat filtering**: `HEARTBEAT_OK` and other system messages won't trigger TTS
 - **ASR crash protection**: empty audio segments causing onnxruntime crash → try/except silent skip
-- **Wake sound**: TTS short feedback on wake (reserved, pending better sound scheme)
+- **Wake feedback**: TTS speaks "我在" on wake detection (both KWS and ASR paths)
+- **Mic mute control**: `TTS_MUTE_MIC` config option to control mic pausing during TTS (default: off)
 
 ---
 
@@ -228,7 +252,7 @@ Every message sent to Agent is prefixed with `VOICE_BRIDGE_TAG` (default `[bridg
 | VAD | RMS energy threshold | Custom impl, with pre-buffer + tail trimming |
 | Audio | sounddevice | Cross-platform mic capture |
 | Agent comm | websockets + Ed25519 signing | Gateway WebSocket protocol |
-| TTS | sherpa-onnx VITS (vits-icefall-zh-aishell3) | Offline Chinese synthesis |
+| TTS | sherpa-onnx MeloTTS (vits-melo-tts-zh_en) | Offline Chinese+English synthesis |
 | Crypto | cryptography | Ed25519 device signing |
 
 ---
@@ -251,7 +275,7 @@ openclaw-bridge/
 └── models/
     ├── sherpa-onnx-paraformer-zh-small-2024-03-09/       # ASR model
     ├── sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01/  # KWS model
-    └── vits-icefall-zh-aishell3/                         # TTS model
+    └── vits-melo-tts-zh_en/                                  # TTS model (MeloTTS Chinese+English)
 ```
 
 ---
@@ -292,3 +316,15 @@ openclaw-bridge/
 - All deployment params externalized to config.py
 - Fixed: non-wake-word ASR results leaking to logs in IDLE state
 - Fixed: buffer state (`_waiting_response`/`_pending_cmd`) not cleared on FOLLOWUP→IDLE timeout
+
+### 2026-03-27 V5.3: Wake Feedback + Mic Control Optimization
+- TTS speaks "我在" on wake detection (both KWS and ASR paths)
+- Added `TTS_MUTE_MIC` config: control mic pausing during TTS playback (default: False)
+- Fixed: dead code after `return` in `_handle_wake_detected` (indentation bug)
+- Project published to GitHub: https://github.com/wang1970/openclaw-bridge
+
+### 2026-03-28 V5.4: TTS Model Upgrade to MeloTTS + Debug Logging
+- TTS model upgraded from `vits-icefall-zh-aishell3` (8000Hz, Chinese only) to `vits-melo-tts-zh_en` (22050Hz, Chinese+English)
+- `tts_engine.py` added `dict_dir`/`data_dir` params for MeloTTS support
+- Removed `TTS_KEEP_ENGLISH` config (MeloTTS natively supports Chinese+English, no character filtering needed)
+- DEBUG logs always written to `logs/debug.log` for troubleshooting

@@ -41,8 +41,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# 控制台默认只显示 INFO+，通过 --debug 切换为 DEBUG+
+# 控制台默认只显示 INFO+
 logging.getLogger().handlers[0].setLevel(logging.INFO)
+
+# DEBUG 日志写入文件（始终开启，方便排查问题）
+_file_handler = logging.FileHandler("logs/debug.log", encoding="utf-8")
+_file_handler.setLevel(logging.DEBUG)
+_file_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S"))
+logging.getLogger().addHandler(_file_handler)
 
 # TTS 引擎（可选）
 _tts = None
@@ -52,12 +58,15 @@ if config.TTS_ENABLED:
         model_dir = config.TTS_MODEL_DIR
         tokens = config.TTS_TOKENS or f"{model_dir}/tokens.txt"
         lexicon = config.TTS_LEXICON or f"{model_dir}/lexicon.txt"
+        dict_dir = config.TTS_DICT_DIR or f"{model_dir}/dict"
+        data_dir = config.TTS_DATA_DIR or f"{model_dir}/espeak-ng-data"
         _tts = TTSEngine(
             model_dir=model_dir,
             tokens=tokens,
             lexicon=lexicon,
+            dict_dir=dict_dir,
+            data_dir=data_dir,
             length_scale=config.TTS_LENGTH_SCALE,
-            keep_english=config.TTS_KEEP_ENGLISH,
         )
     except Exception as e:
         logger.warning(f"TTS 初始化失败，语音播报不可用: {e}")
@@ -233,6 +242,7 @@ class VoiceBridge:
         self.state = State.WAKE_DETECTED
         self.cmd_buffer = []
         self.last_utterance_time = now
+        self._speak("我在")
 
     # ─── 语音片段处理 ───────────────────────────────────────
 
@@ -295,6 +305,7 @@ class VoiceBridge:
             self.state = State.WAKE_DETECTED
             self.cmd_buffer = []
             logger.info(f">>> 唤醒词「{config.WAKE_WORD}」检测成功！请说出指令...")
+            self._speak("我在")
 
     def _handle_wake_detected(self, text: str):
         """唤醒后等待命令：收到第一段语音，开始录制"""
@@ -307,7 +318,7 @@ class VoiceBridge:
             self.last_utterance_time = time.time()
             return
 
-            logger.debug(f"[命令片段] {text}")
+        logger.debug(f"[命令片段] {text}")
         self.state = State.LISTENING_CMD
         self.cmd_buffer = [text]
 
@@ -389,12 +400,14 @@ class VoiceBridge:
             return
         logger.debug("状态: TTS 播报中...")
         self.state = State.PLAYING
-        self._pause_mic()
+        if config.TTS_MUTE_MIC:
+            self._pause_mic()
         try:
             _tts.speak(text)
         except Exception as e:
             logger.error(f"TTS 播报异常: {e}")
-        self._resume_mic()
+        if config.TTS_MUTE_MIC:
+            self._resume_mic()
 
     # ─── Agent 响应处理（TTS 播报）──────────────────────────
 
@@ -490,6 +503,7 @@ def main():
 
     if args.debug:
         logging.getLogger().handlers[0].setLevel(logging.DEBUG)
+        logger.info("控制台已开启 DEBUG 模式，完整日志同时写入 logs/debug.log")
     if args.model_dir:
         config.MODEL_DIR = args.model_dir
     if args.openclaw_url:

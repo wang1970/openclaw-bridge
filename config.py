@@ -40,7 +40,7 @@ FOLLOWUP_TIMEOUT = 8.0
 OPENCLAW_URL = "http://127.0.0.1:18789/"
 OPENCLAW_TIMEOUT = 5  # 超时秒数
 
-# OpenClaw WebSocket 认证 Token
+# OpenClaw WebSocket 认证 Token（获取：OpenClaw Hub → 设备管理 → 点击设备 → 复制 Token）
 OPENCLAW_TOKEN = "106d50240bfdb0a93666180c7acce7afc68181d5cb91c14e"
 
 # OpenClaw 会话标识（发送消息时必须携带，需兼容 Windows 文件名）
@@ -71,8 +71,10 @@ KWS_ENABLED = True
 
 # TTS 语音播报
 TTS_ENABLED = True
-TTS_MODEL_DIR = "./models/vits-icefall-zh-aishell3"  # VITS 中文模型目录
+TTS_MODEL_DIR = "./models/vits-melo-tts-zh_en"  # MeloTTS 中英双语模型
 TTS_TOKENS = ""       # tokens.txt 路径（留空则从 model_dir 读取）
 TTS_LEXICON = ""      # lexicon.txt 路径（留空则从 model_dir 读取）
+TTS_DICT_DIR = ""     # dict 目录路径（MeloTTS 需要，留空则从 model_dir 读取）
+TTS_DATA_DIR = ""     # espeak-ng 数据目录（MeloTTS 需要，留空则从 model_dir 读取）
 TTS_LENGTH_SCALE = 0.7  # 语速（0.5~2.0，越小越快，TODO: 运行时可调）
-TTS_KEEP_ENGLISH = False  # 保留英文和数字（换多语言 TTS 模型时设为 True）
+TTS_MUTE_MIC = False  # TTS 播报时是否暂停麦克风（True 暂停，False 不暂停）

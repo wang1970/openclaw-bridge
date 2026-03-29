@@ -15,7 +15,7 @@ models/
 
 # Logs
 logs/
-*.log
+*.logs
 
 # Device key (sensitive)
 .device_key.json
@@ -25,6 +25,7 @@ logs/
 .idea/
 *.swp
 *.swo
+.codebuddy/
 
 # OS
 Thumbs.db

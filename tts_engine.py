@@ -10,16 +10,10 @@ import sounddevice as sd
 logger = logging.getLogger(__name__)
 
 
-def clean_text_for_tts(text: str, *, keep_english: bool = False) -> str:
+def clean_text_for_tts(text: str) -> str:
     """
-    清洗文本，使其适合中文 TTS 模型合成。
-
-    Args:
-        text: 原始文本
-        keep_english: 是否保留英文和数字（换多语言模型时设为 True）
-
-    Returns:
-        清洗后的文本
+    清洗文本，使其适合 TTS 合成。
+    去除 emoji、markdown 格式符号等非语音内容，其余交给 TTS 模型处理。
     """
     if not text:
         return ""
@@ -41,18 +35,11 @@ def clean_text_for_tts(text: str, *, keep_english: bool = False) -> str:
         flags=re.UNICODE,
     ).sub("", text)
 
-    # 2. 去 markdown 格式符号 + 特殊符号
+    # 2. 去 markdown 格式符号
     text = re.sub(r"[#*`~\[\]()>{|_\uff5e\u3000]", "", text)
 
     # 3. 去 markdown checklist 标记
     text = re.sub(r"\u2705|\u274c|\u2714\ufe0f|\u274e", "", text)
-
-    if keep_english:
-        # 多语言模式：保留中英文、数字、标点
-        text = re.sub(r"[^\u4e00-\u9fff\u3000-\u303f\uff00-\uffef\w\s，。！？、；：\u201c\u201d\u2018\u2019（）【】《》—…·,.!?;:\\-]", "", text)
-    else:
-        # 纯中文模式：只保留中文和中文标点
-        text = re.sub(r"[^\u4e00-\u9fff\u3000-\u303f\uff00-\uffef\s，。！？、；：""''（）【】《》—…·]", "", text)
 
     # 4. 合并多余空白
     text = re.sub(r"\s+", " ", text).strip()
@@ -64,15 +51,14 @@ class TTSEngine:
     """使用 sherpa-onnx VITS 模型离线合成语音，sounddevice 播放。"""
 
     def __init__(self, model_dir: str, tokens: str, lexicon: str = "",
-                 noise_scale: float = 0.667, length_scale: float = 1.0,
-                 keep_english: bool = False):
-        self.keep_english = keep_english
+                 dict_dir: str = "", data_dir: str = "",
+                 noise_scale: float = 0.667, length_scale: float = 1.0):
         vits = sherpa_onnx.OfflineTtsVitsModelConfig(
             model=f"{model_dir}/model.onnx",
             tokens=tokens,
             lexicon=lexicon,
-            data_dir="",
-            dict_dir="",
+            data_dir=data_dir,
+            dict_dir=dict_dir,
             noise_scale=noise_scale,
             length_scale=length_scale,
         )
@@ -93,7 +79,7 @@ class TTSEngine:
             return False
 
         # 清洗文本
-        text = clean_text_for_tts(text, keep_english=self.keep_english)
+        text = clean_text_for_tts(text)
 
         logger.debug(f"TTS 合成文本: \"{text[:60]}\"")
         if not text:

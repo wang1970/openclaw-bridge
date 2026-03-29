@@ -19,7 +19,7 @@ Real-time microphone listening → wake-word detection → speech-to-text → se
 # 1. Install dependencies
 pip install -r requirements.txt
 
-# 2. Download models (~300MB)
+# 2. Download models (~350MB)
 python download_model.py
 
 # 3. Configure OpenClaw connection in config.py
@@ -37,13 +37,14 @@ Edit `config.py` before first run:
 
 | Parameter | Description |
 |-----------|-------------|
-| `OPENCLAW_URL` | Gateway address (default: `http://127.0.0.1:18789/`) |
-| `OPENCLAW_TOKEN` | WebSocket auth token |
-| `OPENCLAW_SESSION_KEY` | Agent session key (e.g. `agent:main:main`) |
+| `OPENCLAW_URL` | Gateway address, same as your OpenClaw Hub URL (default: `http://127.0.0.1:18789/`) |
+| `OPENCLAW_TOKEN` | Device auth token, found in OpenClaw Hub → Device Management → click your device → copy the Token field |
+| `OPENCLAW_SESSION_KEY` | Agent session key, same as the `session` parameter in your chat URL (e.g. `agent:main:main`) |
 | `VOICE_BRIDGE_TAG` | Message prefix for Agent to identify voice source (default: `[bridge] `) |
 | `WAKE_WORD` | Wake word for ASR text matching (default: `小龙虾`) |
 | `KWS_KEYWORDS` | Wake words for KWS engine |
 | `TTS_LENGTH_SCALE` | Speech speed (0.5~2.0, lower = faster, default: 0.7) |
+| `TTS_MUTE_MIC` | Pause mic during TTS playback (default: `False`) |
 
 ### Chinese Users
 
@@ -51,7 +52,8 @@ Just make sure the 4 connection parameters are correct, everything else works ou
 
 ```python
 OPENCLAW_URL = "http://127.0.0.1:18789/"
-OPENCLAW_TOKEN = "your-token-here"
+# Token: OpenClaw Hub → Device Management → click your device → copy Token
+OPENCLAW_TOKEN = "your-token-here"  # ↑ replace with your actual token
 OPENCLAW_SESSION_KEY = "agent:main:main"
 VOICE_BRIDGE_TAG = "[bridge] "   # your Agent should recognize this tag
 ```
@@ -66,7 +68,7 @@ To use with English speech, you need to replace the models:
 4. **KWS model** — change `KWS_MODEL_DIR` to an English keyword spotter model, and add pinyin mapping in `kws_engine.py`
 5. Or disable KWS entirely: `KWS_ENABLED = False` (uses ASR text matching only)
 
-Set `TTS_KEEP_ENGLISH = True` if your TTS model supports English.
+MeloTTS natively supports Chinese+English mixed text, no extra configuration needed.
 
 ## CLI Arguments
 
